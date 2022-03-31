@@ -98,7 +98,7 @@ for epoch in range(nb_epochs):
 
     loss = b_xent(logits, lbl)
 
-    print('Loss:', loss)
+    print('Epoch: {}, Loss:{:.8f}'.format(epoch, loss))
 
     if loss < best:
         best = loss
@@ -196,8 +196,8 @@ for _ in range(5):
     mac_f1.append(mac)
     
 accs = torch.stack(accs)
-print('Average accuracy:',accs.mean())
-print('accuracy std:',accs.std())
+print('Average accuracy:{:.5f}, std: {:.5f}'.format(accs.mean(), accs.std()))
+# print('accuracy std:',accs.std().data)
 mac_f1 = torch.stack(mac_f1)
-print('Average mac_f1:', mac_f1.mean())
-print('mac_f1 std:',mac_f1.std())
+print('Average mac_f1: {:.5f}, std: {:.5f}'.format(mac_f1.mean(), mac_f1.std()))
+# print('mac_f1 std:',mac_f1.std().data)

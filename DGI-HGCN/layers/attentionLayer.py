@@ -30,7 +30,7 @@ class SemanticAttentionLayer(nn.Module):
         semantic_attentions = semantic_attentions.mean(dim=1,keepdim=True)
         #semantic_attentions = P*1
         semantic_attentions = F.softmax(semantic_attentions, dim=0)
-        print(semantic_attentions)
+        # print(semantic_attentions)
         semantic_attentions = semantic_attentions.view(P,1,1)
         semantic_attentions = semantic_attentions.repeat(1,N,self.in_features)
 #        print(semantic_attentions)
