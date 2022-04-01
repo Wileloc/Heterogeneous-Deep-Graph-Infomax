@@ -109,7 +109,7 @@ def sample_mask(idx, l):
     return np.array(mask, dtype=np.bool)
 
 
-def load_data(path="../data/IMDB/3-class/", dataset="IMDB"):
+def load_data(path="data/IMDB/3-class/", dataset="IMDB"):
     """Load citation network dataset (cora only for now)"""
     print('Loading {} dataset...'.format(dataset))
     features = None

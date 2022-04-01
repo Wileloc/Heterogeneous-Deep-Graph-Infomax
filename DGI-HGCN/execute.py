@@ -6,8 +6,16 @@ import os
 import glob
 from models import DGI, LogReg
 from utils import process
+import argparse
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--K', type=int, default=3, help='Number of clusters')
+parser.add_argument('--clustertemp', type=int, default=30, help='how hard to make the softmax ofr the cluster assignments')
+parser.add_argument('--device', type=int, default=3, help='No. device')
+parser.add_argument('--alpha', type=float, default=1.0, help='balance between dgi loss and community loss')
+
+args = parser.parse_args()
 
 # training params
 batch_size = 1
@@ -23,7 +31,7 @@ nonlinearity = 'prelu' # special name to separate parameters
 
 if torch.cuda.is_available():
  device = torch.device("cuda")
- torch.cuda.set_device(3)
+ torch.cuda.set_device(args.device)
 else:
  device = torch.device("cpu")
  
@@ -94,9 +102,12 @@ for epoch in range(nb_epochs):
         shuf_fts = shuf_fts.cuda()
         lbl = lbl.cuda()
     
-    logits = model(features, shuf_fts, sp_nor_adjs if sparse else nor_adjs, sparse, None, None, None) 
+    pos_z, neg_z, summary, mu, r, dist = model(features, shuf_fts, sp_nor_adjs if sparse else nor_adjs, sparse, None, None, None, args.K, args.clustertemp) 
 
-    loss = b_xent(logits, lbl)
+    # loss = b_xent(logits, lbl)
+    dgi_loss = model.loss(pos_z, neg_z, summary)
+    comm_loss = model.comm_loss(pos_z, mu)
+    loss = dgi_loss + args.alpha * comm_loss
 
     print('Epoch: {}, Loss:{:.8f}'.format(epoch, loss))
 
