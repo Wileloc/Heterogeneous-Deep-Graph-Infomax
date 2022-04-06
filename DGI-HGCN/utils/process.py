@@ -109,7 +109,7 @@ def sample_mask(idx, l):
     return np.array(mask, dtype=np.bool)
 
 
-def load_data(path="data/IMDB/3-class/", dataset="IMDB"):
+def load_IMDB_data(path="data/IMDB/3-class/", dataset="IMDB"):
     """Load citation network dataset (cora only for now)"""
     print('Loading {} dataset...'.format(dataset))
     features = None
@@ -209,3 +209,45 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     values = torch.from_numpy(sparse_mx.data)
     shape = torch.Size(sparse_mx.shape)
     return torch.sparse.FloatTensor(indices, values, shape)
+
+
+def load_DBLP_data(path="data/DBLP/", dataset="DBLP"):
+    """Load citation network dataset (cora only for now)"""
+    print('Loading {} dataset...'.format(dataset))
+    features = None
+    labels = []
+    with open(path+'author_features_334.pickle', 'rb') as f:
+         features = pkl.load(f) 
+    f.close
+    features = sp.csr_matrix(features, dtype=np.float32) 
+    with open(path+'author_label.txt', 'r') as l:
+        lines = l.readlines()
+        for line in lines:
+            line = line.split('\t')
+            labels.append(int(line[1]))
+    l.close
+    labels = encode_onehot(labels)    
+
+    adjs = []
+    for adj_name in ['net_APA','net_APCPA','net_APTPA']:
+        with open('/mnt1/home/wzm/{}_adj.pickle'.format(adj_name), 'rb') as f:
+            adj = pkl.load(f) 
+        f.close
+        adjs.append(adj) 
+    
+    original = range(4000)
+    idx_train = random.sample(original,1000)
+    original = list(set(original) ^ set(idx_train))
+    idx_val = random.sample(original,800)
+    idx_test = list(set(original) ^ set(idx_val))
+    
+    
+#    adj = torch.FloatTensor(np.array(adj.todense()))
+#    features = torch.FloatTensor(np.array(features.todense()))
+#    labels = torch.LongTensor(np.where(labels)[1])
+#
+#    idx_train = torch.LongTensor(idx_train)
+#    idx_val = torch.LongTensor(idx_val)
+#    idx_test = torch.LongTensor(idx_test)
+
+    return adjs, features, labels, idx_train, idx_val, idx_test

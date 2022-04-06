@@ -7,13 +7,14 @@ import glob
 from models import DGI, LogReg
 from utils import process
 import argparse
+from utils.clustering import my_Kmeans
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--K', type=int, default=3, help='Number of clusters')
+parser.add_argument('--K', type=int, default=4, help='Number of clusters')
 parser.add_argument('--clustertemp', type=int, default=30, help='how hard to make the softmax ofr the cluster assignments')
-parser.add_argument('--device', type=int, default=3, help='No. device')
-parser.add_argument('--alpha', type=float, default=1.0, help='balance between dgi loss and community loss')
+parser.add_argument('--device', type=int, default=0, help='No. device')
+parser.add_argument('--alpha', type=float, default=0.5, help='balance between dgi loss and community loss')
 
 args = parser.parse_args()
 
@@ -35,7 +36,7 @@ if torch.cuda.is_available():
 else:
  device = torch.device("cpu")
  
-adjs, features, labels, idx_train, idx_val, idx_test = process.load_data()
+adjs, features, labels, idx_train, idx_val, idx_test = process.load_IMDB_data()
 features, _ = process.preprocess_features(features)
 
 nb_nodes = features.shape[0]
@@ -107,7 +108,7 @@ for epoch in range(nb_epochs):
     # loss = b_xent(logits, lbl)
     dgi_loss = model.loss(pos_z, neg_z, summary)
     comm_loss = model.comm_loss(pos_z, mu)
-    loss = dgi_loss + args.alpha * comm_loss
+    loss = args.alpha * dgi_loss + (1 - args.alpha) * comm_loss
 
     print('Epoch: {}, Loss:{:.8f}'.format(epoch, loss))
 
@@ -212,3 +213,7 @@ print('Average accuracy:{:.5f}, std: {:.5f}'.format(accs.mean(), accs.std()))
 mac_f1 = torch.stack(mac_f1)
 print('Average mac_f1: {:.5f}, std: {:.5f}'.format(mac_f1.mean(), mac_f1.std()))
 # print('mac_f1 std:',mac_f1.std().data)
+embeddings = embeds.to(torch.device("cpu")).squeeze(0).detach().numpy()   
+labels_np = labels.squeeze(0)
+labels_np = labels_np.to(torch.device("cpu")).numpy()
+my_Kmeans(embeddings, labels_np, k=4, time=10, return_NMI=False)
